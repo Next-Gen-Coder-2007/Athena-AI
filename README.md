@@ -1,3 +1,7 @@
+<div style="text-align: center;">
+  <img src="logo.png" width="300" />
+</div>
+
 # Athena AI — Intelligent Placement Management Platform
 
 An AI-agent powered campus placement ecosystem built with React, FastAPI, PostgreSQL, and autonomous multi-agent workflows for intelligent recruitment, resume analysis, and career guidance.
