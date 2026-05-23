@@ -1,8 +1,10 @@
-# Placement Management System with AI Agents
+## Athena AI — AI-Agent Powered Placement Management Platform
+
+Built using React, FastAPI, PostgreSQL, and autonomous AI agents for intelligent recruitment workflows, resume analysis, and career guidance.
 
 ## Project Overview
 
-Placement Management System is a modern full-stack web platform designed to streamline and automate campus placement activities for students, recruiters, and placement officers.
+Athena AI is a modern full-stack web platform designed to streamline and automate campus placement activities for students, recruiters, and placement officers.
 
 The system enables:
 
