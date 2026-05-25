@@ -1,6 +1,5 @@
-import './Home.css'
 import { useEffect, useState } from 'react'
-import api from '../../services/api'
+import api from '../services/api'
 
 const Home = () => {
     const [message, setMessage] = useState()
