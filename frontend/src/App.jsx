@@ -6,6 +6,9 @@ import Dashboard from './pages/Dashboard';
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./components/NotFound";
+import Features from "./pages/Features";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 const App = () => {
   return (
@@ -20,6 +23,9 @@ const App = () => {
           </ProtectedRoute>
         }
         />
+        <Route path="/features" element={<Features />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
