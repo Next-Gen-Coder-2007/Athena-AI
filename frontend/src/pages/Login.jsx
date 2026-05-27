@@ -30,8 +30,16 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await API.post("/auth/login", formData);
-            localStorage.setItem("user", JSON.stringify(response.data.user));
-            navigate("/dashboard");
+            const { access_token, user } = response.data;
+            localStorage.setItem("user", JSON.stringify(user));
+            localStorage.setItem("token", access_token);
+            // set default header
+            API.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+            if (user.must_change_password) {
+                navigate('/change-password');
+            } else {
+                navigate("/dashboard");
+            }
         } catch (error) {
             setError(error.response?.data?.detail || "Login failed. Please try again.");
         }
