@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
-    FaUserCircle, FaSignOutAlt, FaChartLine, FaCalendarAlt, FaCog,
-    FaBriefcase, FaFileAlt, FaBell, FaSearch, FaPlus, FaEdit,
-    FaTrash, FaEye, FaFilter, FaSort, FaDownload, FaTachometerAlt
+    FaUserCircle, FaSignOutAlt, FaBriefcase, FaBell, FaSearch, FaPlus, FaTachometerAlt, FaCog, FaChartLine, FaEye
 } from 'react-icons/fa';
 import StudentsAdmin from './admin/StudentsAdmin';
 import RecruitersAdmin from './admin/RecruitersAdmin';
@@ -18,11 +16,8 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [jobs, setJobs] = useState([
         { id: 1, title: 'Software Engineer', company: 'Tech Corp', status: 'Open', date: '2023-11-15' },
-        { id: 2, title: 'Data Scientist', company: 'AI Solutions', status: 'Open', date: '2023-11-10' },
     ]);
-    const [notifications, setNotifications] = useState([
-        { id: 1, message: 'New job posting: Software Engineer at Tech Corp', time: '2 hours ago', read: false },
-    ]);
+    const [notifications, setNotifications] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
@@ -48,12 +43,7 @@ const AdminDashboard = () => {
         job.company.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const stats = [
-        { label: 'Total Students', value: '120', icon: <FaFileAlt />, color: 'blue' },
-        { label: 'Total Recruiters', value: '32', icon: <FaBriefcase />, color: 'green' },
-        { label: 'Companies', value: '18', icon: <FaChartLine />, color: 'yellow' },
-        { label: 'Open Jobs', value: '24', icon: <FaTachometerAlt />, color: 'purple' },
-    ];
+    // Admin stats removed to keep dashboard minimal and professional
 
     const getStatusColor = (status) => {
         switch(status.toLowerCase()) {
@@ -153,22 +143,7 @@ const AdminDashboard = () => {
 
                     {/* Main Content */}
                     <div className="lg:col-span-3">
-                        {/* Stats Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            {stats.map((stat, index) => (
-                                <div key={index} className="bg-white rounded-lg shadow-md p-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg bg-${stat.color}-100`}>
-                                            <span className={`text-${stat.color}-600 text-xl`}>{stat.icon}</span>
-                                        </div>
-                                        <div>
-                                            <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
-                                            <p className="text-sm text-gray-500">{stat.label}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        {/* Removed default stats cards to streamline Admin view */}
 
                         <div className="bg-white rounded-lg shadow-md p-6">
                             {activeTab === 'overview' && (

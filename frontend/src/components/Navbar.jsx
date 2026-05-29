@@ -49,15 +49,26 @@ const Navbar = () => {
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/login" className="text-blue-600 hover:text-blue-700 transition">
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-            >
-              Get Started <FaArrowRight className="text-xs" />
-            </Link>
+            {(() => {
+              const stored = localStorage.getItem('user');
+              if (stored) {
+                try {
+                  const u = JSON.parse(stored);
+                  const path = u.role === 'admin' ? '/admin' : u.role === 'recruiter' ? '/recruiter' : '/student';
+                  return (
+                    <Link to={path} className="text-blue-600 hover:text-blue-700 transition">Dashboard</Link>
+                  );
+                } catch (e) {
+                  // fallthrough
+                }
+              }
+              return (
+                <>
+                  <Link to="/login" className="text-blue-600 hover:text-blue-700 transition">Login</Link>
+                  <Link to="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">Get Started <FaArrowRight className="text-xs" /></Link>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>
