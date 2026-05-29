@@ -30,6 +30,8 @@ const Admin = {
     updateRecruiter: (id, data) => API.put(`/admin/recruiters/${id}`, data),
     deleteRecruiter: (id) => API.delete(`/admin/recruiters/${id}`),
     listRecruiters: () => API.get('/admin/recruiters'),
+    linkRecruiter: (data) => API.post('/admin/recruiters/link', data),
+    suggestUsername: (username) => API.get(`/admin/username-suggest?username=${encodeURIComponent(username)}`),
 
     createCompany: (data) => API.post('/admin/companies', data),
     updateCompany: (id, data) => API.put(`/admin/companies/${id}`, data),

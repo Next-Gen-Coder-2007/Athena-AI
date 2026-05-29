@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel
 
@@ -50,10 +50,18 @@ class RecruiterCreateSchema(BaseModel):
     email: str
     username: Optional[str] = None
     password: str
-    company_id: Optional[int] = None
+    # Accept empty string from frontend; coerce to int or None in route
+    company_id: Optional[Union[int, str]] = None
+    position: Optional[str] = None
+
+
+class RecruiterLinkSchema(BaseModel):
+    user_id: Optional[int] = None
+    username: Optional[str] = None
+    company_id: Optional[Union[int, str]] = None
     position: Optional[str] = None
 
 
 class RecruiterUpdateSchema(BaseModel):
-    company_id: Optional[int] = None
+    company_id: Optional[Union[int, str]] = None
     position: Optional[str] = None

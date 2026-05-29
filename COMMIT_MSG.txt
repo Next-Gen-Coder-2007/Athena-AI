@@ -1,0 +1,4 @@
+Admin: auto-generate recruiter username; add username-suggest and link endpoints
+Frontend: recruiter UI - link existing user and username suggestion
+Admin UI: remove user_id from student form
+Backend: add request logging and route-check scripts

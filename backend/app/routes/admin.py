@@ -13,6 +13,7 @@ from app.schemas.admin_schemas import (
     StudentUpdateSchema,
     RecruiterCreateSchema,
     RecruiterUpdateSchema,
+    RecruiterLinkSchema,
 )
 
 from app.core.jwt import require_role
@@ -131,15 +132,31 @@ def create_recruiter(recruiter: RecruiterCreateSchema, db: Session = Depends(get
     if not (recruiter.name and recruiter.email and recruiter.password):
         raise HTTPException(status_code=400, detail="Provide name, email and password to create a new user")
 
+    # derive username if not provided
     username = recruiter.username or recruiter.email.split('@')[0]
-    existing_user = db.query(User).filter((User.username == username) | (User.email == recruiter.email)).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Username or email already exists")
+    # if email already exists, refuse (can't attach new user with same email)
+    existing_by_email = db.query(User).filter(User.email == recruiter.email).first()
+    if existing_by_email:
+        raise HTTPException(status_code=400, detail="Email already exists")
+
+    # if username exists, auto-generate a unique one by appending numbers
+    existing_username = db.query(User).filter(User.username == username).first()
+    generated_username = username
+    if existing_username:
+        i = 1
+        while True:
+            cand = f"{username}{i}"
+            if not db.query(User).filter(User.username == cand).first():
+                generated_username = cand
+                break
+            i += 1
+    else:
+        generated_username = username
 
     import bcrypt as _bcrypt
     hashed = _bcrypt.hashpw(recruiter.password.encode(), _bcrypt.gensalt()).decode()
 
-    user = User(full_name=recruiter.name, email=recruiter.email, username=username, password=hashed, role=UserRole.recruiter, must_change_password=True)
+    user = User(full_name=recruiter.name, email=recruiter.email, username=generated_username, password=hashed, role=UserRole.recruiter, must_change_password=True)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -148,9 +165,19 @@ def create_recruiter(recruiter: RecruiterCreateSchema, db: Session = Depends(get
     if existing:
         raise HTTPException(status_code=400, detail="Recruiter profile already exists")
 
+    # coerce empty-string company_id to None or int
+    comp_id = recruiter.company_id
+    if isinstance(comp_id, str) and comp_id.strip() == '':
+        comp_id = None
+    elif isinstance(comp_id, str):
+        try:
+            comp_id = int(comp_id)
+        except ValueError:
+            comp_id = None
+
     new_recruiter = RecruiterProfile(
         user_id=user.id,
-        company_id=recruiter.company_id,
+        company_id=comp_id,
         position=recruiter.position,
     )
 
@@ -158,7 +185,58 @@ def create_recruiter(recruiter: RecruiterCreateSchema, db: Session = Depends(get
     db.commit()
     db.refresh(new_recruiter)
 
-    return {"message": "Recruiter profile created successfully", "recruiter_id": new_recruiter.id}
+    return {"message": "Recruiter profile created successfully", "recruiter_id": new_recruiter.id, "created_username": generated_username}
+
+
+@router.get('/username-suggest')
+def suggest_username(username: str, db: Session = Depends(get_db)):
+    base = username
+    if not base:
+        raise HTTPException(status_code=400, detail='username query param required')
+    if not db.query(User).filter(User.username == base).first():
+        return {"suggestion": base}
+    i = 1
+    while True:
+        cand = f"{base}{i}"
+        if not db.query(User).filter(User.username == cand).first():
+            return {"suggestion": cand}
+        i += 1
+
+
+@router.post('/recruiters/link')
+def link_recruiter(payload: RecruiterLinkSchema, db: Session = Depends(get_db)):
+    # require either user_id or username
+    if not (payload.user_id or payload.username):
+        raise HTTPException(status_code=400, detail='Provide user_id or username to link')
+
+    user = None
+    if payload.user_id:
+        user = db.query(User).filter(User.id == payload.user_id).first()
+    else:
+        user = db.query(User).filter(User.username == payload.username).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+
+    existing = db.query(RecruiterProfile).filter(RecruiterProfile.user_id == user.id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail='Recruiter profile already exists for this user')
+
+    comp_id = payload.company_id
+    if isinstance(comp_id, str) and comp_id.strip() == '':
+        comp_id = None
+    elif isinstance(comp_id, str):
+        try:
+            comp_id = int(comp_id)
+        except ValueError:
+            comp_id = None
+
+    new_recruiter = RecruiterProfile(user_id=user.id, company_id=comp_id, position=payload.position)
+    db.add(new_recruiter)
+    db.commit()
+    db.refresh(new_recruiter)
+
+    return {"message": "Recruiter linked successfully", "recruiter_id": new_recruiter.id}
 
 
 @router.put("/recruiters/{recruiter_id}")
@@ -168,6 +246,16 @@ def update_recruiter(recruiter_id: int, recruiter: RecruiterUpdateSchema, db: Se
         raise HTTPException(status_code=404, detail="Recruiter profile not found")
 
     update_data = recruiter.dict(exclude_unset=True)
+    # coerce company_id if present
+    if 'company_id' in update_data:
+        comp_id = update_data.get('company_id')
+        if isinstance(comp_id, str) and comp_id.strip() == '':
+            update_data['company_id'] = None
+        elif isinstance(comp_id, str):
+            try:
+                update_data['company_id'] = int(comp_id)
+            except ValueError:
+                update_data['company_id'] = None
     for field, value in update_data.items():
         setattr(db_recruiter, field, value)
 

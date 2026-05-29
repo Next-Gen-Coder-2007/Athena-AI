@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Admin } from '../../api/api';
 
-const EmptyForm = { user_id: '', name: '', email: '', username: '', password: '', college_name: '', department: '', graduation_year: '', cgpa: '', github_url: '', linkedin_url: '', skills_summary: '' };
+const EmptyForm = { name: '', email: '', username: '', password: '', college_name: '', department: '', graduation_year: '', cgpa: '', github_url: '', linkedin_url: '', skills_summary: '' };
 
 const StudentsAdmin = () => {
     const [students, setStudents] = useState([]);
@@ -21,7 +21,7 @@ const StudentsAdmin = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        const creating = !editingId && !form.user_id;
+        const creating = !editingId;
         if (creating) {
             if (!form.name || !form.email || !form.username || !form.password) {
                 setError('Name, email, username and password are required when creating a user');
@@ -29,14 +29,25 @@ const StudentsAdmin = () => {
             }
         }
 
-        if (editingId) {
-            await Admin.updateStudent(editingId, form);
-        } else {
-            await Admin.createStudent(form);
+        // prepare payload: convert numeric fields
+        const payload = { ...form };
+        if (payload.graduation_year === '') delete payload.graduation_year; else if (payload.graduation_year != null) payload.graduation_year = Number(payload.graduation_year);
+        if (payload.cgpa === '') delete payload.cgpa; else if (payload.cgpa != null) payload.cgpa = Number(payload.cgpa);
+
+        try {
+            if (editingId) {
+                await Admin.updateStudent(editingId, payload);
+            } else {
+                await Admin.createStudent(payload);
+            }
+            setForm(EmptyForm);
+            setEditingId(null);
+            load();
+        } catch (err) {
+            console.error('Create/Update student error', err);
+            const msg = err.response?.data?.detail || err.message || 'Unexpected error';
+            setError(msg);
         }
-        setForm(EmptyForm);
-        setEditingId(null);
-        load();
     };
 
     const handleEdit = (s) => {
@@ -63,11 +74,10 @@ const StudentsAdmin = () => {
             <h2 className="text-xl font-bold mb-4">Manage Students</h2>
             <form onSubmit={handleSubmit} className="mb-4 grid grid-cols-2 gap-2">
                 {error && <div className="col-span-2 text-red-600">{error}</div>}
-                <input name="user_id" placeholder="User ID (leave blank to create)" value={form.user_id} onChange={handleChange} className="border p-2" />
-                <input name="name" placeholder="Full name" value={form.name || ''} onChange={handleChange} className="border p-2" required={!form.user_id} />
-                <input name="email" placeholder="Email" value={form.email || ''} onChange={handleChange} className="border p-2" type="email" required={!form.user_id} />
-                <input name="username" placeholder="Username" value={form.username || ''} onChange={handleChange} className="border p-2" required={!form.user_id} />
-                <input name="password" placeholder="Password" value={form.password || ''} onChange={handleChange} className="border p-2" type="password" required={!form.user_id} />
+                <input name="name" placeholder="Full name" value={form.name || ''} onChange={handleChange} className="border p-2" required={!editingId} />
+                <input name="email" placeholder="Email" value={form.email || ''} onChange={handleChange} className="border p-2" type="email" required={!editingId} />
+                <input name="username" placeholder="Username" value={form.username || ''} onChange={handleChange} className="border p-2" required={!editingId} />
+                <input name="password" placeholder="Password" value={form.password || ''} onChange={handleChange} className="border p-2" type="password" required={!editingId} />
                 <input name="college_name" placeholder="College" value={form.college_name} onChange={handleChange} className="border p-2" />
                 <input name="department" placeholder="Department" value={form.department} onChange={handleChange} className="border p-2" />
                 <input name="graduation_year" placeholder="Grad Year" value={form.graduation_year} onChange={handleChange} className="border p-2" />
